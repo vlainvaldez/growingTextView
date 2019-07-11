@@ -73,6 +73,7 @@ extension KeyboardManager {
         
         if let delegate = self.delegate {
             delegate.kmScrollTo()
+            delegate.kmDidShow(height: info.height)
         }
 
     }
@@ -88,5 +89,9 @@ extension KeyboardManager {
         
         self.scrollView.contentInset = contentInsets
         self.scrollView.scrollIndicatorInsets = contentInsets
+        
+        if let delegate = self.delegate {
+            delegate.kmDidHide()
+        }
     }
 }

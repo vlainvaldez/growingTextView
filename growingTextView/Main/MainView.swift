@@ -14,7 +14,7 @@ public class MainView: UIView {
     // MARK: - Subviews
     private let scrollView: UIScrollView = {
         let view: UIScrollView = UIScrollView()
-        view.backgroundColor = UIColor.clear
+        view.backgroundColor = UIColor.blue.withAlphaComponent(0.5)
         return view
     }()
     
@@ -30,21 +30,21 @@ public class MainView: UIView {
         return view
     }()
     
-    public let questionTextView: UITextView = {
-        let view: UITextView = UITextView()
+    public let questionTextView: UITextField = {
+        let view: UITextField = UITextField()
         view.backgroundColor = UIColor.black
         view.layer.cornerRadius = 9.0
         view.layer.masksToBounds = true
-        view.isScrollEnabled = true
         view.font = UIFont.systemFont(ofSize: 20)
         view.textColor = UIColor.white
         view.text = "type here"
+        view.returnKeyType = .done
         return view
     }()
     
     // MARK: Stored Properties
     private var keyboardManager: KeyboardManager?
-    private var topTextViewConstraint: Constraint!
+    private var textViewBottomConstraint: Constraint!
     
     // MARK: - Initializer
     public override init(frame: CGRect) {
@@ -57,19 +57,22 @@ public class MainView: UIView {
         self.keyboardManager?.delegate = self
         
         self.viewContainer.subviews(forAutoLayout: [
-            self.spaceView, self.questionTextView
+            self.spaceView
         ])
         
         self.subviews(forAutoLayout: [
-            self.scrollView
+            self.scrollView, self.questionTextView
         ])
         
         self.scrollView.subviews(forAutoLayout: [
             self.viewContainer
         ])
         
-        self.scrollView.snp.remakeConstraints { (make: ConstraintMaker) -> Void in
-            make.edges.equalToSuperview()
+        self.scrollView.snp.remakeConstraints { [unowned self] (make: ConstraintMaker) -> Void in
+            make.top.equalToSuperview()
+            make.trailing.equalToSuperview()
+            make.leading.equalToSuperview()
+            make.bottom.equalTo(self.questionTextView.snp.top)
         }
         
         self.viewContainer.snp.remakeConstraints { (make: ConstraintMaker) -> Void in
@@ -85,13 +88,14 @@ public class MainView: UIView {
             make.height.equalTo(self.scrollView.snp.height).inset(80.0)
         }
         
-        self.questionTextView.snp.remakeConstraints { [unowned self] (make: ConstraintMaker) -> Void in
+        self.questionTextView.snp.remakeConstraints { (make: ConstraintMaker) -> Void in
             make.height.equalTo(60.0)
             make.leading.equalToSuperview()
             make.trailing.equalToSuperview()
-            make.top.equalTo(self.spaceView.snp.bottom)
-            make.bottom.equalToSuperview()
+            self.textViewBottomConstraint = make.bottom.equalToSuperview().inset(20.0).constraint
         }
+        
+        self.questionTextView.delegate = self
     }
     
     public required init?(coder aDecoder: NSCoder) {
@@ -107,5 +111,30 @@ public class MainView: UIView {
 extension MainView: KeyboardManagerDelegate {
     public func kmScrollTo() {
         self.scrollView.scrollRectToVisible(self.questionTextView.frame, animated: true)
+    }
+    
+    public func kmDidShow(height: CGFloat) {
+        print("height \(height)")        
+        self.textViewBottomConstraint.update(inset: height+20)
+        UIView.animate(withDuration: 0.3) {
+            self.layoutIfNeeded()
+        }
+    }
+    
+    public func kmDidHide() {
+        self.textViewBottomConstraint.update(inset: 20)
+        UIView.animate(withDuration: 0.3) {
+            self.layoutIfNeeded()
+        }
+        
+    }
+}
+
+// MARK: - KeyboardManagerDelegate Methods
+extension MainView: UITextFieldDelegate {
+    
+    public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
 }

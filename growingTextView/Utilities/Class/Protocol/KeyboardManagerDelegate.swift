@@ -6,12 +6,16 @@
 //  Copyright © 2019 alvin joseph valdez. All rights reserved.
 //
 
-import Foundation
+import UIKit
 
 public protocol KeyboardManagerDelegate: class {    
     func kmScrollTo()
+    func kmDidShow(height: CGFloat)
+    func kmDidHide()
 }
 
 extension KeyboardManagerDelegate {
     public func kmScrollTo() {}
+    public func kmDidShow(height: CGFloat) {}
+    public func kmDidHide() {}
 }
